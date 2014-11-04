@@ -77,7 +77,7 @@ struct config_parse_state {
 
 /* path functions */
 
-bool is_supported_ctl_type(enum mixer_ctl_type type)
+static bool is_supported_ctl_type(enum mixer_ctl_type type)
 {
     switch (type) {
     case MIXER_CTL_TYPE_BOOL:
@@ -410,7 +410,7 @@ static void start_tag(void *data, const XML_Char *tag_name,
         switch (mixer_ctl_get_type(ctl)) {
         case MIXER_CTL_TYPE_BOOL:
         case MIXER_CTL_TYPE_INT:
-            value = atoi((char *)attr_value);
+            value = (int) strtol((char *)attr_value, NULL, 0);
             break;
         case MIXER_CTL_TYPE_ENUM:
             value = mixer_enum_string_to_value(ctl, (char *)attr_value);
@@ -677,9 +677,8 @@ static int audio_route_update_path(struct audio_route *ar, const char *name, boo
         struct mixer_state * ms = &ar->mixer_state[ctl_index];
 
         type = mixer_ctl_get_type(ms->ctl);
-        if ((type != MIXER_CTL_TYPE_BOOL) && (type != MIXER_CTL_TYPE_INT) &&
-            (type != MIXER_CTL_TYPE_ENUM)) {
-                continue;
+        if (!is_supported_ctl_type(type)) {
+            continue;
         }
 
         /* if any value has changed, update the mixer */
